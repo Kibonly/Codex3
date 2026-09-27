@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codex3: Calorie Tracker</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            position: relative;
+        }
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            color: var(--text);
+        }
+        .progress-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(var(--success) 0%, #e2e8f0 0);
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: background 0.3s;
+        }
+        .progress-inner {
+            width: 120px;
+            height: 120px;
+            background: var(--card);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .calories-left {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .label {
+            font-size: 12px;
+            color: #64748b;
+        }
+        
+        .guide-btn {
+            width: 100%;
+            padding: 8px;
+            background-color: #f1f5f9;
+            color: var(--primary);
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+        }
+        .guide-btn:active {
+            background-color: #e2e8f0;
+        }
+
+        /* Mini Calculator Styles */
+        .calc-box {
+            background: #f8fafc;
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+        .calc-header {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        .calc-display {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 16px;
+            font-family: monospace;
+            box-sizing: border-box;
+            background: white;
+            margin-bottom: 8px;
+        }
+        .calc-display:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .calc-operators {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .op-btn {
+            flex: 1;
+            background: #e2e8f0;
+            border: 1px solid #cbd5e1;
+            color: var(--text);
+            border-radius: 6px;
+            padding: 8px 0;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .op-btn:active {
+            background: #cbd5e1;
+        }
+        .calc-result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .calc-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .calc-btn:active {
+            opacity: 0.8;
+        }
+        .calc-output {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text);
+        }
+
+        .meal-group {
+            margin-bottom: 16px;
+        }
+        .meal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        label {
+            font-size: 14px;
+            font-weight: 500;
+            margin: 0;
+        }
+        .logged-badge {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary);
+            background: #eff6ff;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .undo-btn {
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            transition: all 0.2s;
+        }
+        .undo-btn:active {
+            color: var(--danger);
+            background: #fee2e2;
+        }
+
+        input[type="number"], input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            background-color: white;
+        }
+        input[type="number"]:focus, input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        /* Hide number input spin buttons */
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        
+        .log-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+        .log-btn:active {
+            opacity: 0.9;
+        }
+        .reset-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--border);
+            color: var(--text);
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .reset-btn:active {
+            opacity: 0.8;
+        }
+        
+        /* Calendar Styles */
+        .calendar-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 2px solid var(--border);
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .calendar-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            text-align: center;
+        }
+        .day-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+        .calendar-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #f1f5f9;
+            color: #94a3b8;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .calendar-cell:active {
+            transform: scale(0.95);
+        }
+        .cell-success {
+            background: var(--success);
+            color: white;
+            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
+        }
+        .cell-danger {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        }
+        .cell-today {
+            border: 2px solid var(--primary);
+            color: var(--text);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 16px;
+            z-index: 10;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal {
+            background: white;
+            width: 85%;
+            max-height: 80%;
+            overflow-y: auto;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .modal-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+        .modal-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        .modal-total {
+            font-weight: bold;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--border);
+        }
+        .modal-close {
+            width: 100%;
+            padding: 10px;
+            background: var(--border);
+            color: var(--text);
+            border: none;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .empty-text {
+            color: #94a3b8;
+            font-style: italic;
+        }
+        
+        /* Interactive Table styles for guide */
+        .food-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        .food-table th, .food-table td {
+            text-align: left;
+            padding: 10px 4px;
+            border-bottom: 1px solid var(--border);
+        }
+        .food-table td:nth-child(2) {
+            text-align: right;
+            font-weight: 500;
+        }
+        .food-table td:nth-child(3) {
+            text-align: center;
+            width: 30px;
+        }
+        .food-category {
+            background: #f1f5f9;
+            font-weight: bold;
+            font-size: 13px;
+            color: var(--text);
+            padding: 8px 4px !important;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .del-btn {
+            color: var(--danger);
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            background: #fee2e2;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .add-food-section {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px dashed #cbd5e1;
+        }
+        .add-food-section h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: var(--text);
+        }
+        .flex-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Codex3: Daily Target 2100</h2>
+    
+    <div class="progress-circle" id="progressRing">
+        <div class="progress-inner">
+            <p class="calories-left" id="caloriesRemaining">2100</p>
+            <p class="label">Remaining</p>
+        </div>
+    </div>
+
+    <button class="guide-btn" onclick="openGuide()">📖 View Food Calorie Chart</button>
+
+    <!-- Mini Calculator with Operation Buttons -->
+    <div class="calc-box">
+        <div class="calc-header">Quick Calculator</div>
+        <!-- input type text so mobile doesn't block operator symbols, but JS validates it -->
+        <input type="text" id="calcInput" class="calc-display" placeholder="e.g. 200 * 1.5 + 70" oninput="validateCalcInput(this)">
+        
+        <div class="calc-operators">
+            <button class="op-btn" onclick="appendCalc('+')">+</button>
+            <button class="op-btn" onclick="appendCalc('-')">-</button>
+            <button class="op-btn" onclick="appendCalc('*')">×</button>
+            <button class="op-btn" onclick="appendCalc('/')">÷</button>
+        </div>
+
+        <div class="calc-result-row">
+            <button class="calc-btn" onclick="runCalc()">Calculate</button>
+            <div class="calc-output" id="calcResult">= 0</div>
+        </div>
+    </div>
+
+    <div class="meal-group">
+        <div class="meal-header">
+            <label>Breakfast</label>
+            <div class="logged-badge">Logged: <span id="logged_b">0</span> <div class="undo-btn" onclick="clearMeal('b')" title="Reset to 0">↺</div></div>
+        </div>
+        <input type="number" id="breakfast_in" placeholder="+ Add calories eaten..." min="0" oninput="validateMealInput(this)">
+    </div>
+    
+    <div class="meal-group">
+        <div class="meal-header">
+            <label>Lunch</label>
+            <div class="logged-badge">Logged: <span id="logged_l">0</span> <div class="undo-btn" onclick="clearMeal('l')" title="Reset to 0">↺</div></div>
+        </div>
+        <input type="number" id="lunch_in" placeholder="+ Add calories eaten..." min="0" oninput="validateMealInput(this)">
+    </div>
+    
+    <div class="meal-group">
+        <div class="meal-header">
+            <label>Evening Snack</label>
+            <div class="logged-badge">Logged: <span id="logged_s">0</span> <div class="undo-btn" onclick="clearMeal('s')" title="Reset to 0">↺</div></div>
+        </div>
+        <input type="number" id="snack_in" placeholder="+ Add calories eaten..." min="0" oninput="validateMealInput(this)">
+    </div>
+    
+    <div class="meal-group">
+        <div class="meal-header">
+            <label>Dinner</label>
+            <div class="logged-badge">Logged: <span id="logged_d">0</span> <div class="undo-btn" onclick="clearMeal('d')" title="Reset to 0">↺</div></div>
+        </div>
+        <input type="number" id="dinner_in" placeholder="+ Add calories eaten..." min="0" oninput="validateMealInput(this)">
+    </div>
+
+    <button id="mainLogBtn" class="log-btn" onclick="logMeals()">Add & Save Meals</button>
+    <button class="reset-btn" onclick="resetForm()">Reset Entire Day</button>
+
+    <!-- Calendar System -->
+    <div class="calendar-section">
+        <div class="calendar-header">
+            <h3>Consistency Log</h3>
+            <span id="monthYearText" style="font-size: 14px; color: #64748b; font-weight: 500;"></span>
+        </div>
+        <div class="calendar-grid" id="calendarGrid">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Modal for showing past days -->
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal">
+            <div class="modal-header" id="modalDateTitle">Date</div>
+            <div class="modal-row"><span>Breakfast:</span> <span id="modalB"></span></div>
+            <div class="modal-row"><span>Lunch:</span> <span id="modalL"></span></div>
+            <div class="modal-row"><span>Snack:</span> <span id="modalS"></span></div>
+            <div class="modal-row"><span>Dinner:</span> <span id="modalD"></span></div>
+            <div class="modal-row modal-total"><span>Total:</span> <span id="modalTotal">0</span></div>
+            <button class="modal-close" onclick="closeModal('historyModal')">Close</button>
+        </div>
+    </div>
+
+    <!-- Modal for Dynamic Food Calorie Guide -->
+    <div class="modal-overlay" id="guideModal">
+        <div class="modal">
+            <div class="modal-header">Calorie Quick Guide</div>
+            
+            <table class="food-table">
+                <tbody id="foodTableBody">
+                    <!-- Populated dynamically -->
+                </tbody>
+            </table>
+
+            <div class="add-food-section">
+                <h4>+ Add New Item</h4>
+                <input type="text" id="newFoodName" placeholder="Food Name (e.g. Apple)" oninput="trackChanges()">
+                <div class="flex-row">
+                    <input type="number" id="newFoodCal" placeholder="Calories" min="0" style="flex: 1;" oninput="validateMealInput(this); trackChanges()">
+                    <select id="newFoodCat" style="flex: 1.5;" onchange="trackChanges()">
+                        <option value="Custom Foods">Custom Foods</option>
+                        <option value="Meals & Staples">Meals & Staples</option>
+                        <option value="Heavy / Fried Snacks">Heavy Snacks</option>
+                        <option value="Healthy Swaps">Healthy Swaps</option>
+                        <option value="Drinks">Drinks</option>
+                    </select>
+                </div>
+                <button id="saveFoodBtn" class="log-btn" style="padding: 8px; margin-top: 12px; font-size: 14px;" onclick="saveChartChanges()">Save Changes</button>
+            </div>
+
+            <button class="modal-close" onclick="closeGuideSafely()">Close Guide</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const GOAL = 2100;
+    
+    // Core meal tracking variables
+    let curB = 0;
+    let curL = 0;
+    let curS = 0;
+    let curD = 0;
+
+    // --- Input Validation ---
+    
+    function validateCalcInput(inputField) {
+        // Only allow numbers 0-9, spaces, dot, plus, minus, multiply, divide
+        inputField.value = inputField.value.replace(/[^0-9.+\-*/ ]/g, '');
+    }
+
+    function validateMealInput(inputField) {
+        // Strip out 'e', 'E', '-', '+', '.' so only pure positive integers remain
+        inputField.value = inputField.value.replace(/[^0-9]/g, '');
+    }
+
+    // --- Mini Calculator Logic ---
+
+    function appendCalc(operator) {
+        const input = document.getElementById('calcInput');
+        input.value = input.value + " " + operator + " ";
+        input.focus(); 
+    }
+
+    function runCalc() {
+        const inputStr = document.getElementById('calcInput').value;
+        const sanitized = inputStr.replace(/[^0-9.+\-*/() ]/g, '');
+        
+        if (!sanitized) {
+            document.getElementById('calcResult').innerText = "= 0";
+            return;
+        }
+
+        try {
+            const result = new Function('return ' + sanitized)();
+            if (!isNaN(result)) {
+                const finalNum = Math.round(result * 10) / 10;
+                document.getElementById('calcResult').innerText = "= " + finalNum;
+            } else {
+                document.getElementById('calcResult').innerText = "Error";
+            }
+        } catch (e) {
+            document.getElementById('calcResult').innerText = "Error";
+        }
+    }
+
+    // Draft state for the calorie chart
+    let tempFoods = [];
+    let hasUnsavedFoodChanges = false;
+
+    const DEFAULT_FOODS = [
+        { id: 1, cat: "Meals & Staples", name: "White Rice (1 cup)", cal: 200 },
+        { id: 2, cat: "Meals & Staples", name: "Chicken Curry", cal: 300 },
+        { id: 3, cat: "Meals & Staples", name: "Alu Bhorta + 1 Egg", cal: 450 },
+        { id: 4, cat: "Meals & Staples", name: "Porata Roll", cal: 350 },
+        { id: 5, cat: "Heavy / Fried Snacks", name: "Alur Chop (1 pc)", cal: 225 },
+        { id: 6, cat: "Heavy / Fried Snacks", name: "Kacchi Biryani", cal: 1100 },
+        { id: 7, cat: "Healthy Swaps", name: "Boiled Egg (1 pc)", cal: 70 },
+        { id: 8, cat: "Healthy Swaps", name: "Cucumber (1 medium)", cal: 20 },
+        { id: 9, cat: "Healthy Swaps", name: "Chhola Makha", cal: 260 },
+        { id: 10, cat: "Healthy Swaps", name: "Tok Doi", cal: 75 },
+        { id: 11, cat: "Drinks", name: "Normal Tea", cal: 20 },
+        { id: 12, cat: "Drinks", name: "Milk Tea", cal: 85 }
+    ];
+
+    function getFoods() {
+        const stored = localStorage.getItem('codex3_foods');
+        if (!stored) {
+            localStorage.setItem('codex3_foods', JSON.stringify(DEFAULT_FOODS));
+            return DEFAULT_FOODS;
+        }
+        return JSON.parse(stored);
+    }
+
+    function renderFoodTable() {
+        const tbody = document.getElementById('foodTableBody');
+        tbody.innerHTML = '';
+
+        const categories = ["Custom Foods", "Meals & Staples", "Heavy / Fried Snacks", "Healthy Swaps", "Drinks"];
+        
+        categories.forEach(cat => {
+            const catFoods = tempFoods.filter(f => f.cat === cat);
+            if(catFoods.length > 0) {
+                tbody.innerHTML += `<tr><td colspan="3" class="food-category">${cat}</td></tr>`;
+                catFoods.forEach(f => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${f.name}</td>
+                            <td>${f.cal}</td>
+                            <td><span class="del-btn" onclick="deleteFoodItem(${f.id})">✕</span></td>
+                        </tr>
+                    `;
+                });
+            }
+        });
+    }
+
+    function trackChanges() {
+        hasUnsavedFoodChanges = true;
+    }
+
+    function deleteFoodItem(id) {
+        tempFoods = tempFoods.filter(f => f.id !== id);
+        hasUnsavedFoodChanges = true;
+        renderFoodTable(); 
+    }
+
+    function saveChartChanges() {
+        const name = document.getElementById('newFoodName').value.trim();
+        const calStr = document.getElementById('newFoodCal').value;
+        const cat = document.getElementById('newFoodCat').value;
+
+        if (name !== '' || calStr !== '') {
+            const cal = parseInt(calStr);
+            if (!name || isNaN(cal)) {
+                alert("Please enter a valid food name and calorie amount before saving.");
+                return;
+            }
+            const newId = tempFoods.length > 0 ? Math.max(...tempFoods.map(f => f.id)) + 1 : 1;
+            tempFoods.push({ id: newId, cat: cat, name: name, cal: cal });
+        }
+
+        localStorage.setItem('codex3_foods', JSON.stringify(tempFoods));
+        
+        document.getElementById('newFoodName').value = '';
+        document.getElementById('newFoodCal').value = '';
+        hasUnsavedFoodChanges = false;
+        
+        const btn = document.getElementById('saveFoodBtn');
+        btn.innerText = "✓ Saved!";
+        btn.style.backgroundColor = "var(--success)";
+        
+        setTimeout(() => {
+            btn.innerText = "Save Changes";
+            btn.style.backgroundColor = "var(--primary)";
+        }, 1500);
+
+        renderFoodTable();
+    }
+    
+    // --- Tracking Logic ---
+    
+    function getTodayStr() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    const todayStr = getTodayStr();
+
+    window.onload = function() {
+        checkNewDayReset();
+        
+        // Load the previously logged totals from storage
+        curB = Number(localStorage.getItem('active_b')) || 0;
+        curL = Number(localStorage.getItem('active_l')) || 0;
+        curS = Number(localStorage.getItem('active_s')) || 0;
+        curD = Number(localStorage.getItem('active_d')) || 0;
+        
+        updateUI(); 
+    }
+
+    function checkNewDayReset() {
+        const lastLogin = localStorage.getItem('last_login_date');
+        
+        if (lastLogin && lastLogin !== todayStr) {
+            localStorage.removeItem('active_b');
+            localStorage.removeItem('active_l');
+            localStorage.removeItem('active_s');
+            localStorage.removeItem('active_d');
+        }
+        
+        localStorage.setItem('last_login_date', todayStr);
+    }
+
+    function logMeals() {
+        // Read what the user wants to ADD
+        const addB = Number(document.getElementById('breakfast_in').value) || 0;
+        const addL = Number(document.getElementById('lunch_in').value) || 0;
+        const addS = Number(document.getElementById('snack_in').value) || 0;
+        const addD = Number(document.getElementById('dinner_in').value) || 0;
+        
+        // Apply the additions to the cumulative totals
+        curB += addB;
+        curL += addL;
+        curS += addS;
+        curD += addD;
+        
+        // Clear the input boxes to get them ready for the next entry
+        document.getElementById('breakfast_in').value = '';
+        document.getElementById('lunch_in').value = '';
+        document.getElementById('snack_in').value = '';
+        document.getElementById('dinner_in').value = '';
+        
+        // Visual confirmation on the button
+        const btn = document.getElementById('mainLogBtn');
+        btn.innerText = "✓ Added to Total!";
+        btn.style.backgroundColor = "var(--success)";
+        setTimeout(() => {
+            btn.innerText = "Add & Save Meals";
+            btn.style.backgroundColor = "var(--primary)";
+        }, 1500);
+
+        updateUI();
+    }
+
+    function clearMeal(mealType) {
+        if(confirm("Are you sure you want to reset this specific meal back to 0?")) {
+            if (mealType === 'b') curB = 0;
+            if (mealType === 'l') curL = 0;
+            if (mealType === 's') curS = 0;
+            if (mealType === 'd') curD = 0;
+            updateUI();
+        }
+    }
+
+    function resetForm() {
+        if(confirm("Are you sure you want to clear your entire tracking for today?")) {
+            curB = 0;
+            curL = 0;
+            curS = 0;
+            curD = 0;
+            
+            document.getElementById('breakfast_in').value = '';
+            document.getElementById('lunch_in').value = '';
+            document.getElementById('snack_in').value = '';
+            document.getElementById('dinner_in').value = '';
+            
+            updateUI();
+        }
+    }
+
+    function updateUI() {
+        // Save new totals to local storage
+        localStorage.setItem('active_b', curB || '');
+        localStorage.setItem('active_l', curL || '');
+        localStorage.setItem('active_s', curS || '');
+        localStorage.setItem('active_d', curD || '');
+
+        // Update the badges to show current logged state
+        document.getElementById('logged_b').innerText = curB;
+        document.getElementById('logged_l').innerText = curL;
+        document.getElementById('logged_s').innerText = curS;
+        document.getElementById('logged_d').innerText = curD;
+
+        const total = curB + curL + curS + curD;
+        const remaining = GOAL - total;
+
+        // Save detailed history for the calendar
+        let history = JSON.parse(localStorage.getItem('fullHistory')) || {};
+        if (total > 0) {
+            history[todayStr] = { b: curB, l: curL, s: curS, d: curD, total: total };
+            localStorage.setItem('fullHistory', JSON.stringify(history));
+        } else if (history[todayStr]) {
+            delete history[todayStr];
+            localStorage.setItem('fullHistory', JSON.stringify(history));
+        }
+
+        // Update main progress ring
+        const remainingText = document.getElementById('caloriesRemaining');
+        const ring = document.getElementById('progressRing');
+        remainingText.innerText = remaining;
+        
+        let percent = (total / GOAL) * 100;
+        if (percent > 100) percent = 100;
+        
+        let color = "var(--success)";
+        if (total > GOAL) {
+            color = "var(--danger)";
+            remainingText.style.color = "var(--danger)";
+        } else if (percent > 85) {
+            color = "#f59e0b"; 
+            remainingText.style.color = "inherit";
+        } else {
+            remainingText.style.color = "inherit";
+        }
+        
+        ring.style.background = `conic-gradient(${color} ${percent}%, #e2e8f0 0)`;
+        
+        renderCalendar();
+    }
+
+    function renderCalendar() {
+        const history = JSON.parse(localStorage.getItem('fullHistory')) || {};
+        const grid = document.getElementById('calendarGrid');
+        grid.innerHTML = ''; 
+
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth(); 
+
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        document.getElementById('monthYearText').innerText = `${monthNames[month]} ${year}`;
+
+        const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+        days.forEach(day => {
+            const div = document.createElement('div');
+            div.className = 'day-name';
+            div.innerText = day;
+            grid.appendChild(div);
+        });
+
+        const firstDayOfMonth = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let i = 0; i < firstDayOfMonth; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'calendar-cell cell-empty';
+            grid.appendChild(empty);
+        }
+
+        for (let i = 1; i <= daysInMonth; i++) {
+            const cell = document.createElement('div');
+            cell.innerText = i;
+            
+            const cellDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            let classList = "calendar-cell ";
+            const dayData = history[cellDateStr];
+
+            if (dayData) {
+                if (dayData.total <= GOAL) {
+                    classList += "cell-success ";
+                } else {
+                    classList += "cell-danger ";
+                }
+            }
+            
+            if (cellDateStr === todayStr && !dayData) {
+                classList += "cell-today ";
+            } else if (cellDateStr === todayStr && dayData) {
+                cell.style.border = "2px solid #1e293b";
+            }
+
+            cell.className = classList;
+            
+            cell.onclick = () => openHistoryModal(cellDateStr, dayData);
+            
+            grid.appendChild(cell);
+        }
+    }
+
+    function openHistoryModal(dateStr, data) {
+        const dateObj = new Date(dateStr);
+        const options = { month: 'short', day: 'numeric', year: 'numeric' };
+        document.getElementById('modalDateTitle').innerText = dateObj.toLocaleDateString(undefined, options);
+        
+        const formatValue = (val) => (val && val > 0) ? val : '<span class="empty-text">Empty</span>';
+        
+        if (data) {
+            document.getElementById('modalB').innerHTML = formatValue(data.b);
+            document.getElementById('modalL').innerHTML = formatValue(data.l);
+            document.getElementById('modalS').innerHTML = formatValue(data.s);
+            document.getElementById('modalD').innerHTML = formatValue(data.d);
+            document.getElementById('modalTotal').innerText = data.total;
+            
+            const totalElem = document.getElementById('modalTotal');
+            if (data.total > GOAL) {
+                totalElem.style.color = "var(--danger)";
+            } else {
+                totalElem.style.color = "var(--success)";
+            }
+        } else {
+            const emptyHtml = '<span class="empty-text">Empty</span>';
+            document.getElementById('modalB').innerHTML = emptyHtml;
+            document.getElementById('modalL').innerHTML = emptyHtml;
+            document.getElementById('modalS').innerHTML = emptyHtml;
+            document.getElementById('modalD').innerHTML = emptyHtml;
+            document.getElementById('modalTotal').innerText = '0';
+            document.getElementById('modalTotal').style.color = "inherit";
+        }
+
+        document.getElementById('historyModal').style.display = 'flex';
+    }
+
+    function openGuide() {
+        tempFoods = JSON.parse(JSON.stringify(getFoods()));
+        hasUnsavedFoodChanges = false;
+        
+        document.getElementById('newFoodName').value = '';
+        document.getElementById('newFoodCal').value = '';
+        
+        renderFoodTable(); 
+        document.getElementById('guideModal').style.display = 'flex';
+    }
+
+    function closeGuideSafely() {
+        if (hasUnsavedFoodChanges) {
+            if (!confirm("You have unsaved changes. Are you sure you want to close without saving?")) {
+                return; 
+            }
+        }
+        
+        document.getElementById('newFoodName').value = '';
+        document.getElementById('newFoodCal').value = '';
+        hasUnsavedFoodChanges = false;
+        closeModal('guideModal');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
